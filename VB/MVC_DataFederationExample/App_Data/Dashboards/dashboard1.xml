@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard>
+  <Title Text="Sample Dashboard" />
+  <DataSources>
+    <FederationDataSource Name="Federated Data Source" ComponentName="federationDataSource1">
+      <Sources>
+        <Source Name="sqlite">
+          <DataSource>sqlDataSource1</DataSource>
+          <DataMember>SQLite Orders</DataMember>
+        </Source>
+        <Source Name="excel">
+          <DataSource>excelDataSource1</DataSource>
+        </Source>
+        <Source Name="SalesPersonDS">
+          <DataSource>objectDataSource1</DataSource>
+        </Source>
+      </Sources>
+      <Queries>
+        <Query Alias="FDS" QueryType="SelectNode">
+          <Root QueryType="SourceNode" SourceName="sqlite" />
+          <SubNodes>
+            <JoinElement Condition="[excel.OrderID] = [sqlite.OrderID]">
+              <Query QueryType="SourceNode" SourceName="excel" />
+            </JoinElement>
+            <JoinElement Condition="[SalesPersonDS.SalesPerson] = [excel.Sales Person]">
+              <Query QueryType="SourceNode" SourceName="SalesPersonDS" />
+            </JoinElement>
+          </SubNodes>
+          <Expressions>
+            <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="sqlite" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ShipCity" NodeAlias="sqlite" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ShipCountry" NodeAlias="sqlite" />
+            <Expression ExpressionType="SelectColumnExpression" Name="CategoryName" NodeAlias="excel" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ProductName" NodeAlias="excel" />
+            <Expression ExpressionType="SelectColumnExpression" Name="Extended Price" NodeAlias="excel" />
+            <Expression ExpressionType="SelectColumnExpression" Name="SalesPerson" NodeAlias="SalesPersonDS" />
+            <Expression ExpressionType="SelectColumnExpression" Name="Weight" NodeAlias="SalesPersonDS" />
+          </Expressions>
+        </Query>
+      </Queries>
+      <CalculatedFields>
+        <CalculatedField Name="Score" Expression="[Weight] * [Extended Price] / 100" DataType="Auto" DataMember="FDS" />
+      </CalculatedFields>
+    </FederationDataSource>
+    <SqlDataSource Name="SQLite Data Source" ComponentName="sqlDataSource1">
+      <Connection Name="connection" ProviderKey="SQLite">
+        <Parameters>
+          <Parameter Name="database" Value="C:\Gallery\WhatsNew19.1\MVC_DataFederationExample\MVC_DataFederationExample\App_Data\nwind.db" />
+          <Parameter Name="read only" Value="1" />
+          <Parameter Name="generateConnectionHelper" Value="false" />
+          <Parameter Name="password" Value="" />
+        </Parameters>
+      </Connection>
+      <Query Type="SelectQuery" Name="SQLite Orders">
+        <Tables>
+          <Table Name="Orders" />
+        </Tables>
+        <Columns>
+          <AllColumns Table="Orders" />
+        </Columns>
+      </Query>
+      <ResultSchema>
+        <DataSet Name="SQLite Data Source">
+          <View Name="SQLite Orders">
+            <Field Name="OrderID" Type="Int64" />
+            <Field Name="CustomerID" Type="String" />
+            <Field Name="EmployeeID" Type="Int64" />
+            <Field Name="OrderDate" Type="DateTime" />
+            <Field Name="RequiredDate" Type="DateTime" />
+            <Field Name="ShippedDate" Type="DateTime" />
+            <Field Name="ShipVia" Type="Int64" />
+            <Field Name="Freight" Type="Decimal" />
+            <Field Name="ShipName" Type="String" />
+            <Field Name="ShipAddress" Type="String" />
+            <Field Name="ShipCity" Type="String" />
+            <Field Name="ShipRegion" Type="String" />
+            <Field Name="ShipPostalCode" Type="String" />
+            <Field Name="ShipCountry" Type="String" />
+          </View>
+        </DataSet>
+      </ResultSchema>
+      <ConnectionOptions CloseConnection="true" />
+    </SqlDataSource>
+    <ExcelDataSource Name="ExcelDS" FileName="C:\Gallery\WhatsNew19.1\MVC_DataFederationExample\MVC_DataFederationExample\App_Data\SalesPerson.xlsx" ComponentName="excelDataSource1">
+      <Options Type="DevExpress.DataAccess.Excel.ExcelSourceOptions" SkipEmptyRows="true" UseFirstRowAsHeader="true" SkipHiddenColumns="true" SkipHiddenRows="true">
+        <ImportSettings Type="DevExpress.DataAccess.Excel.ExcelWorksheetSettings" WorksheetName="Data" />
+      </Options>
+      <Schema />
+      <ResultSchema>
+        <View>
+          <Field Name="CategoryName" Type="String" />
+          <Field Name="Country" Type="String" />
+          <Field Name="ProductName" Type="String" />
+          <Field Name="Sales Person" Type="String" />
+          <Field Name="OrderDate" Type="DateTime" />
+          <Field Name="OrderID" Type="Double" />
+          <Field Name="Quantity" Type="Double" />
+          <Field Name="Discount" Type="Double" />
+          <Field Name="Extended Price" Type="Double" />
+          <Field Name="UnitPrice" Type="Double" />
+        </View>
+      </ResultSchema>
+    </ExcelDataSource>
+    <ObjectDataSource Name="ObjectDS" ComponentName="objectDataSource1">
+      <DataSource Type="System.Collections.Generic.List`1[[MVC_DataFederationExample.SalesPersonData, MVC_DataFederationExample, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    </ObjectDataSource>
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" DataSource="federationDataSource1" DataMember="FDS">
+      <DataItems>
+        <Measure DataMember="Score" DefaultId="DataItem0" />
+        <Dimension DataMember="SalesPerson" DefaultId="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument DefaultId="DataItem1" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value DefaultId="DataItem0" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+    </Chart>
+    <ListBox ComponentName="listBoxDashboardItem1" Name="List Box 1" DataSource="federationDataSource1" DataMember="FDS">
+      <DataItems>
+        <Dimension DataMember="CategoryName" DefaultId="DataItem0" />
+      </DataItems>
+      <FilterDimensions>
+        <Dimension DefaultId="DataItem0" />
+      </FilterDimensions>
+    </ListBox>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup Weight="100">
+      <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="34.589299171062549" />
+      <LayoutItem DashboardItem="chartDashboardItem1" Weight="165.41070082893745" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>
