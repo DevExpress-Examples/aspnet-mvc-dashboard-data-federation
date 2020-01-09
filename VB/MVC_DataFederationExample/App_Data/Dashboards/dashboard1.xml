@@ -45,7 +45,7 @@
     <SqlDataSource Name="SQLite Data Source" ComponentName="sqlDataSource1">
       <Connection Name="connection" ProviderKey="SQLite">
         <Parameters>
-          <Parameter Name="database" Value="nwind.db" />
+          <Parameter Name="database" Value="C:\Gallery\WhatsNew19.1\MVC_DataFederationExample\MVC_DataFederationExample\App_Data\nwind.db" />
           <Parameter Name="read only" Value="1" />
           <Parameter Name="generateConnectionHelper" Value="false" />
           <Parameter Name="password" Value="" />
@@ -81,7 +81,7 @@
       </ResultSchema>
       <ConnectionOptions CloseConnection="true" />
     </SqlDataSource>
-    <ExcelDataSource Name="ExcelDS" FileName="SalesPerson.xlsx" ComponentName="excelDataSource1">
+    <ExcelDataSource Name="ExcelDS" FileName="C:\Gallery\WhatsNew19.1\MVC_DataFederationExample\MVC_DataFederationExample\App_Data\SalesPerson.xlsx" ComponentName="excelDataSource1">
       <Options Type="DevExpress.DataAccess.Excel.ExcelSourceOptions" SkipEmptyRows="true" UseFirstRowAsHeader="true" SkipHiddenColumns="true" SkipHiddenRows="true">
         <ImportSettings Type="DevExpress.DataAccess.Excel.ExcelWorksheetSettings" WorksheetName="Data" />
       </Options>
