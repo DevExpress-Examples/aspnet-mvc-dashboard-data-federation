@@ -4,7 +4,9 @@ using DevExpress.DashboardWeb.Mvc;
 using DevExpress.DataAccess.ConnectionParameters;
 using DevExpress.DataAccess.DataFederation;
 using DevExpress.DataAccess.Excel;
+using DevExpress.DataAccess.Json;
 using DevExpress.DataAccess.Sql;
+using System;
 using System.Web.Hosting;
 using System.Web.Routing;
 
@@ -26,63 +28,90 @@ namespace MVC_DataFederationExample
 
             DataSourceInMemoryStorage dataSourceStorage = new DataSourceInMemoryStorage();
 
-            // Registers an SQL data source.
-            SQLiteConnectionParameters sqliteParams = new SQLiteConnectionParameters();
-            sqliteParams.FileName = HostingEnvironment.MapPath(@"~/App_Data/nwind.db");
-
-            DashboardSqlDataSource sqlDataSource = new DashboardSqlDataSource("SQLite Data Source", sqliteParams);
-            SelectQuery selectQuery = SelectQueryFluentBuilder
+            // Configures an SQL data source.
+            DashboardSqlDataSource sqlDataSource = new DashboardSqlDataSource("SQL Data Source", "NWindConnectionString");
+            SelectQuery query = SelectQueryFluentBuilder
                 .AddTable("Orders")
                 .SelectAllColumnsFromTable()
-                .Build("SQLite Orders");
-            sqlDataSource.Queries.Add(selectQuery);
-            sqlDataSource.Fill();
-            dataSourceStorage.RegisterDataSource("sqlDataSource", sqlDataSource.SaveToXml());
+                .Build("SQL Orders");
+            sqlDataSource.Queries.Add(query);
 
-            // Registers an Object data source.
-            DashboardObjectDataSource objDataSource = new DashboardObjectDataSource();
-            objDataSource.Name = "ObjectDS";
-            objDataSource.DataSource = DataGenerator.Data;
-            objDataSource.Fill();
+            // Configures an Object data source.
+            DashboardObjectDataSource objDataSource = new DashboardObjectDataSource("Object Data Source");
 
-            dataSourceStorage.RegisterDataSource("objDataSource", objDataSource.SaveToXml());
-
-            // Registers an Excel data source.
-            DashboardExcelDataSource excelDataSource = new DashboardExcelDataSource("ExcelDS");
+            // Configures an Excel data source.
+            DashboardExcelDataSource excelDataSource = new DashboardExcelDataSource("Excel Data Source");
             excelDataSource.FileName = HostingEnvironment.MapPath(@"~/App_Data/SalesPerson.xlsx");
             excelDataSource.SourceOptions = new ExcelSourceOptions(new ExcelWorksheetSettings("Data"));
-            excelDataSource.Fill();
-            dataSourceStorage.RegisterDataSource("excelDataSource", excelDataSource.SaveToXml());
 
-            // Registers the Federated data source.
-            DashboardFederationDataSource federationDataSource = new DashboardFederationDataSource("Federated Data Source");
-            Source sqlSource = new Source("sqlite", sqlDataSource, "SQLite Orders");
-            Source excelSource = new Source("excel", excelDataSource, "");
-            Source objectSource = new Source("SalesPersonDS", objDataSource, "");
-            SelectNode mainQueryCreatedByNodeBuilder =
-                sqlSource.From()
-                .Select("OrderDate", "ShipCity", "ShipCountry")
-                .Join(excelSource, "[excel.OrderID] = [sqlite.OrderID]")
-                    .Select("CategoryName", "ProductName", "Extended Price")
-                    .Join(objectSource, "[SalesPersonDS.SalesPerson] = [excel.Sales Person]")
-                        .Select("SalesPerson", "Weight")
-                        .Build("FDS");
-            federationDataSource.Queries.Add(mainQueryCreatedByNodeBuilder);
-            federationDataSource.CalculatedFields.Add("FDS", "[Weight] * [Extended Price] / 100", "Score");
-            federationDataSource.Fill(new DevExpress.Data.IParameter[0]);
-            dataSourceStorage.RegisterDataSource("federatedDataSource", federationDataSource.SaveToXml());
+            // Configures a JSON data source.
+            DashboardJsonDataSource jsonDataSource = new DashboardJsonDataSource("JSON Data Source");
+            Uri fileUri = new Uri(HostingEnvironment.MapPath(@"~/App_Data/Categories.json"), UriKind.RelativeOrAbsolute);
+            jsonDataSource.JsonSource = new UriJsonSource(fileUri);
 
+            // Registers a Federated data source.
+            dataSourceStorage.RegisterDataSource("federatedDataSource", CreateFederatedDataSource(sqlDataSource,
+                excelDataSource, objDataSource, jsonDataSource).SaveToXml());
 
             DashboardConfigurator.Default.SetDataSourceStorage(dataSourceStorage);
             DashboardConfigurator.Default.DataLoading += DataLoading;
         }
 
-        private static void DataLoading(object sender, DataLoadingWebEventArgs e)
-        {
-            if (e.DataSourceName == "ObjectDS")
-            {
-                e.Data = DataGenerator.CreateSourceData();
+        private static void DataLoading(object sender, DataLoadingWebEventArgs e) {
+            if (e.DataSourceName == "Object Data Source") {
+                e.Data = Invoices.CreateData();
             }
+        }
+        private static DashboardFederationDataSource CreateFederatedDataSource(DashboardSqlDataSource sqlDS,
+            DashboardExcelDataSource excelDS, DashboardObjectDataSource objDS, DashboardJsonDataSource jsonDS) {
+
+            DashboardFederationDataSource federationDataSource = new DashboardFederationDataSource("Federated Data Source");
+
+            Source sqlSource = new Source("sqlSource", sqlDS, "SQL Orders");
+            Source excelSource = new Source("excelSource", excelDS, "");
+            Source objectSource = new Source("objectSource", objDS, "");
+            SourceNode jsonSourceNode = new SourceNode(new Source("json", jsonDS, ""));
+
+            // Join
+            SelectNode joinQuery =
+            sqlSource.From()
+            .Select("OrderDate", "ShipCity", "ShipCountry")
+            .Join(excelSource, "[excelSource.OrderID] = [sqlSource.OrderID]")
+                .Select("CategoryName", "ProductName", "Extended Price")
+                .Join(objectSource, "[objectSource.Country] = [excelSource.Country]")
+                    .Select("Country", "UnitPrice")
+                    .Build("Join query");
+            federationDataSource.Queries.Add(joinQuery);
+
+            // Union and UnionAll
+            UnionNode queryUnionAll = sqlSource.From().Select("OrderID", "OrderDate").Build("OrdersSqlite")
+                .UnionAll(excelSource.From().Select("OrderID", "OrderDate").Build("OrdersExcel"))
+                .Build("OrdersUnionAll");
+            queryUnionAll.Alias = "Union query";
+
+            UnionNode queryUnion = sqlSource.From().Select("OrderID", "OrderDate").Build("OrdersSqlite")
+                .Union(excelSource.From().Select("OrderID", "OrderDate").Build("OrdersExcel"))
+                .Build("OrdersUnion");
+            queryUnion.Alias = "UnionAll query";
+
+            federationDataSource.Queries.Add(queryUnionAll);
+            federationDataSource.Queries.Add(queryUnion);
+
+            // Transformation
+            TransformationNode unfoldNode = new TransformationNode(jsonSourceNode) {
+                Alias = "Unfold",
+                Rules = { new TransformationRule { ColumnName = "Products", Alias = "Product", Unfold = true, Flatten = false } }
+            };
+
+            TransformationNode unfoldFlattenNode = new TransformationNode(jsonSourceNode) {
+                Alias = "Unfold and Flatten",
+                Rules = { new TransformationRule { ColumnName = "Products", Unfold = true, Flatten = true } }
+            };
+
+            federationDataSource.Queries.Add(unfoldNode);
+            federationDataSource.Queries.Add(unfoldFlattenNode);
+
+            return federationDataSource;
         }
     }
 }
