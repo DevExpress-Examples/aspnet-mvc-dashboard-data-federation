@@ -4,54 +4,95 @@
   <DataSources>
     <FederationDataSource Name="Federated Data Source" ComponentName="federationDataSource1">
       <Sources>
-        <Source Name="sqlite">
+        <Source Name="sqlSource">
           <DataSource>sqlDataSource1</DataSource>
-          <DataMember>SQLite Orders</DataMember>
+          <DataMember>SQL Orders</DataMember>
         </Source>
-        <Source Name="excel">
+        <Source Name="excelSource">
           <DataSource>excelDataSource1</DataSource>
         </Source>
-        <Source Name="SalesPersonDS">
+        <Source Name="objectSource">
           <DataSource>objectDataSource1</DataSource>
+        </Source>
+        <Source Name="json">
+          <DataSource>jsonDataSource1</DataSource>
         </Source>
       </Sources>
       <Queries>
-        <Query Alias="FDS" QueryType="SelectNode">
-          <Root QueryType="SourceNode" SourceName="sqlite" />
+        <Query Alias="Join query" QueryType="SelectNode">
+          <Root QueryType="SourceNode" SourceName="sqlSource" />
           <SubNodes>
-            <JoinElement Condition="[excel.OrderID] = [sqlite.OrderID]">
-              <Query QueryType="SourceNode" SourceName="excel" />
+            <JoinElement Condition="[excelSource.OrderID] = [sqlSource.OrderID]">
+              <Query QueryType="SourceNode" SourceName="excelSource" />
             </JoinElement>
-            <JoinElement Condition="[SalesPersonDS.SalesPerson] = [excel.Sales Person]">
-              <Query QueryType="SourceNode" SourceName="SalesPersonDS" />
+            <JoinElement Condition="[objectSource.Country] = [excelSource.Country]">
+              <Query QueryType="SourceNode" SourceName="objectSource" />
             </JoinElement>
           </SubNodes>
           <Expressions>
-            <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="sqlite" />
-            <Expression ExpressionType="SelectColumnExpression" Name="ShipCity" NodeAlias="sqlite" />
-            <Expression ExpressionType="SelectColumnExpression" Name="ShipCountry" NodeAlias="sqlite" />
-            <Expression ExpressionType="SelectColumnExpression" Name="CategoryName" NodeAlias="excel" />
-            <Expression ExpressionType="SelectColumnExpression" Name="ProductName" NodeAlias="excel" />
-            <Expression ExpressionType="SelectColumnExpression" Name="Extended Price" NodeAlias="excel" />
-            <Expression ExpressionType="SelectColumnExpression" Name="SalesPerson" NodeAlias="SalesPersonDS" />
-            <Expression ExpressionType="SelectColumnExpression" Name="Weight" NodeAlias="SalesPersonDS" />
+            <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="sqlSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ShipCity" NodeAlias="sqlSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ShipCountry" NodeAlias="sqlSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="CategoryName" NodeAlias="excelSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="ProductName" NodeAlias="excelSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="Extended Price" NodeAlias="excelSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="Country" NodeAlias="objectSource" />
+            <Expression ExpressionType="SelectColumnExpression" Name="UnitPrice" NodeAlias="objectSource" />
           </Expressions>
         </Query>
+        <Query Alias="Union query" QueryType="UnionNode" UnionType="UnionAll">
+          <UnionElements>
+            <Query Alias="OrdersSqlite" QueryType="SelectNode">
+              <Root QueryType="SourceNode" SourceName="sqlSource" />
+              <Expressions>
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderID" NodeAlias="sqlSource" />
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="sqlSource" />
+              </Expressions>
+            </Query>
+            <Query Alias="OrdersExcel" QueryType="SelectNode">
+              <Root QueryType="SourceNode" SourceName="excelSource" />
+              <Expressions>
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderID" NodeAlias="excelSource" />
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="excelSource" />
+              </Expressions>
+            </Query>
+          </UnionElements>
+        </Query>
+        <Query Alias="UnionAll query" QueryType="UnionNode">
+          <UnionElements>
+            <Query Alias="OrdersSqlite" QueryType="SelectNode">
+              <Root QueryType="SourceNode" SourceName="sqlSource" />
+              <Expressions>
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderID" NodeAlias="sqlSource" />
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="sqlSource" />
+              </Expressions>
+            </Query>
+            <Query Alias="OrdersExcel" QueryType="SelectNode">
+              <Root QueryType="SourceNode" SourceName="excelSource" />
+              <Expressions>
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderID" NodeAlias="excelSource" />
+                <Expression ExpressionType="SelectColumnExpression" Name="OrderDate" NodeAlias="excelSource" />
+              </Expressions>
+            </Query>
+          </UnionElements>
+        </Query>
+        <Query Alias="Unfold" QueryType="TransformationNode">
+          <Root QueryType="SourceNode" SourceName="json" />
+          <TransformationRules>
+            <TransformationRule Name="Products" Alias="Product" Unfold="true" />
+          </TransformationRules>
+        </Query>
+        <Query Alias="Unfold and Flatten" QueryType="TransformationNode">
+          <Root QueryType="SourceNode" SourceName="json" />
+          <TransformationRules>
+            <TransformationRule Name="Products" Flatten="true" Unfold="true" />
+          </TransformationRules>
+        </Query>
       </Queries>
-      <CalculatedFields>
-        <CalculatedField Name="Score" Expression="[Weight] * [Extended Price] / 100" DataType="Auto" DataMember="FDS" />
-      </CalculatedFields>
     </FederationDataSource>
-    <SqlDataSource Name="SQLite Data Source" ComponentName="sqlDataSource1">
-      <Connection Name="connection" ProviderKey="SQLite">
-        <Parameters>
-          <Parameter Name="database" Value="nwind.db" />
-          <Parameter Name="read only" Value="1" />
-          <Parameter Name="generateConnectionHelper" Value="false" />
-          <Parameter Name="password" Value="" />
-        </Parameters>
-      </Connection>
-      <Query Type="SelectQuery" Name="SQLite Orders">
+    <SqlDataSource Name="SQL Data Source" ComponentName="sqlDataSource1" DataProcessingMode="Client">
+      <Connection Name="NWindConnectionString" FromAppConfig="true" />
+      <Query Type="SelectQuery" Name="SQL Orders">
         <Tables>
           <Table Name="Orders" />
         </Tables>
@@ -59,58 +100,30 @@
           <AllColumns Table="Orders" />
         </Columns>
       </Query>
-      <ResultSchema>
-        <DataSet Name="SQLite Data Source">
-          <View Name="SQLite Orders">
-            <Field Name="OrderID" Type="Int64" />
-            <Field Name="CustomerID" Type="String" />
-            <Field Name="EmployeeID" Type="Int64" />
-            <Field Name="OrderDate" Type="DateTime" />
-            <Field Name="RequiredDate" Type="DateTime" />
-            <Field Name="ShippedDate" Type="DateTime" />
-            <Field Name="ShipVia" Type="Int64" />
-            <Field Name="Freight" Type="Decimal" />
-            <Field Name="ShipName" Type="String" />
-            <Field Name="ShipAddress" Type="String" />
-            <Field Name="ShipCity" Type="String" />
-            <Field Name="ShipRegion" Type="String" />
-            <Field Name="ShipPostalCode" Type="String" />
-            <Field Name="ShipCountry" Type="String" />
-          </View>
-        </DataSet>
-      </ResultSchema>
       <ConnectionOptions CloseConnection="true" />
     </SqlDataSource>
-    <ExcelDataSource Name="ExcelDS" FileName="SalesPerson.xlsx" ComponentName="excelDataSource1">
+    <ExcelDataSource Name="Excel Data Source" FileName="D:\work\projects\AspNetCoreDataFederation\AspNetCoreDataFederation\Data\SalesPerson.xlsx" ComponentName="excelDataSource1">
       <Options Type="DevExpress.DataAccess.Excel.ExcelSourceOptions" SkipEmptyRows="true" UseFirstRowAsHeader="true" SkipHiddenColumns="true" SkipHiddenRows="true">
         <ImportSettings Type="DevExpress.DataAccess.Excel.ExcelWorksheetSettings" WorksheetName="Data" />
       </Options>
       <Schema />
-      <ResultSchema>
-        <View>
-          <Field Name="CategoryName" Type="String" />
-          <Field Name="Country" Type="String" />
-          <Field Name="ProductName" Type="String" />
-          <Field Name="Sales Person" Type="String" />
-          <Field Name="OrderDate" Type="DateTime" />
-          <Field Name="OrderID" Type="Double" />
-          <Field Name="Quantity" Type="Double" />
-          <Field Name="Discount" Type="Double" />
-          <Field Name="Extended Price" Type="Double" />
-          <Field Name="UnitPrice" Type="Double" />
-        </View>
-      </ResultSchema>
+      <ResultSchema />
     </ExcelDataSource>
-    <ObjectDataSource Name="ObjectDS" ComponentName="objectDataSource1">
-      <DataSource Type="System.Collections.Generic.List`1[[MVC_DataFederationExample.SalesPersonData, MVC_DataFederationExample, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-    </ObjectDataSource>
+    <ObjectDataSource Name="Object Data Source" ComponentName="objectDataSource1" />
+    <JsonDataSource Name="JSON Data Source" ComponentName="jsonDataSource1">
+      <Source SourceType="DevExpress.DataAccess.Json.UriJsonSource" Uri="file:///D:/work/projects/AspNetCoreDataFederation/AspNetCoreDataFederation/Data/Categories.json" />
+    </JsonDataSource>
   </DataSources>
   <Items>
-    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" DataSource="federationDataSource1" DataMember="FDS">
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" DataSource="federationDataSource1" DataMember="Join query">
       <DataItems>
-        <Measure DataMember="Score" DefaultId="DataItem0" />
-        <Dimension DataMember="SalesPerson" DefaultId="DataItem1" />
+        <Measure DataMember="UnitPrice" SummaryType="Count" DefaultId="DataItem0" />
+        <Dimension DataMember="CategoryName" DefaultId="DataItem1" />
+        <Dimension DataMember="OrderDate" DefaultId="DataItem2" />
       </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension DefaultId="DataItem2" />
+      </SeriesDimensions>
       <Arguments>
         <Argument DefaultId="DataItem1" />
       </Arguments>
@@ -124,18 +137,18 @@
         </Pane>
       </Panes>
     </Chart>
-    <ListBox ComponentName="listBoxDashboardItem1" Name="List Box 1" DataSource="federationDataSource1" DataMember="FDS">
+    <TreeView ComponentName="treeViewDashboardItem1" Name="Tree View 1" DataSource="federationDataSource1" DataMember="Join query" AutoExpand="true">
       <DataItems>
         <Dimension DataMember="CategoryName" DefaultId="DataItem0" />
       </DataItems>
       <FilterDimensions>
         <Dimension DefaultId="DataItem0" />
       </FilterDimensions>
-    </ListBox>
+    </TreeView>
   </Items>
   <LayoutTree>
     <LayoutGroup Weight="100">
-      <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="34.589299171062549" />
+      <LayoutItem DashboardItem="treeViewDashboardItem1" Weight="34.58929917106255" />
       <LayoutItem DashboardItem="chartDashboardItem1" Weight="165.41070082893745" />
     </LayoutGroup>
   </LayoutTree>
