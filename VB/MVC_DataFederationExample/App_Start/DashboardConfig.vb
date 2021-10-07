@@ -16,7 +16,7 @@ Namespace MVC_DataFederationExample
         End Sub
 
         Public Shared Sub RegisterService(ByVal routes As RouteCollection)
-            routes.MapDashboardRoute("dashboardControl")
+            routes.MapDashboardRoute("dashboardControl", "DefaultDashboard")
 
             Dim dashboardFileStorage As New DashboardFileStorage("~/App_Data/Dashboards")
             DashboardConfigurator.Default.SetDashboardStorage(dashboardFileStorage)
@@ -52,6 +52,15 @@ Namespace MVC_DataFederationExample
 
             DashboardConfigurator.Default.SetDataSourceStorage(dataSourceStorage)
             AddHandler DashboardConfigurator.Default.DataLoading, AddressOf DataLoading
+            AddHandler DashboardConfigurator.Default.ConfigureDataConnection, AddressOf ConfigureDataConnection
+        End Sub
+        Private Shared Sub ConfigureDataConnection(ByVal sender As Object, ByVal e As ConfigureDataConnectionWebEventArgs)
+            If e.DataSourceName = "Excel Data Source" Then
+                TryCast(e.ConnectionParameters, ExcelDataSourceConnectionParameters).FileName = HostingEnvironment.MapPath("~/App_Data/SalesPerson.xlsx")
+            ElseIf e.DataSourceName = "JSON Data Source" Then
+                Dim uriSource As UriJsonSource = TryCast((TryCast(e.ConnectionParameters, JsonSourceConnectionParameters)).JsonSource, UriJsonSource)
+                uriSource.Uri = New Uri(HostingEnvironment.MapPath("~/App_Data/Categories.json"), UriKind.RelativeOrAbsolute)
+            End If
         End Sub
 
         Private Shared Sub DataLoading(ByVal sender As Object, ByVal e As DataLoadingWebEventArgs)
@@ -59,6 +68,7 @@ Namespace MVC_DataFederationExample
                 e.Data = Invoices.CreateData()
             End If
         End Sub
+
 
         Private Shared Function CreateFederatedDataSource(ByVal sqlDS As DashboardSqlDataSource, ByVal excelDS As DashboardExcelDataSource, ByVal objDS As DashboardObjectDataSource, ByVal jsonDS As DashboardJsonDataSource) As DashboardFederationDataSource
 

@@ -16,7 +16,7 @@ namespace MVC_DataFederationExample
     {
         public static void RegisterService(RouteCollection routes)
         {
-            routes.MapDashboardRoute("dashboardControl");
+            routes.MapDashboardRoute("dashboardControl", "DefaultDashboard");
 
             DashboardFileStorage dashboardFileStorage = new DashboardFileStorage("~/App_Data/Dashboards");
             DashboardConfigurator.Default.SetDashboardStorage(dashboardFileStorage);
@@ -55,6 +55,17 @@ namespace MVC_DataFederationExample
 
             DashboardConfigurator.Default.SetDataSourceStorage(dataSourceStorage);
             DashboardConfigurator.Default.DataLoading += DataLoading;
+            DashboardConfigurator.Default.ConfigureDataConnection += Default_ConfigureDataConnection;
+        }
+
+        private static void Default_ConfigureDataConnection(object sender, ConfigureDataConnectionWebEventArgs e) {
+            if(e.DataSourceName == "Excel Data Source") {
+                (e.ConnectionParameters as ExcelDataSourceConnectionParameters).FileName = HostingEnvironment.MapPath(@"~/App_Data/SalesPerson.xlsx");
+            }
+            else if(e.DataSourceName == "JSON Data Source") {
+                UriJsonSource uriSource = (e.ConnectionParameters as JsonSourceConnectionParameters).JsonSource as UriJsonSource;
+                uriSource.Uri = new Uri(HostingEnvironment.MapPath(@"~/App_Data/Categories.json"), UriKind.RelativeOrAbsolute);
+            }
         }
 
         private static void DataLoading(object sender, DataLoadingWebEventArgs e) {
