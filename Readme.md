@@ -3,13 +3,8 @@
 [![](https://img.shields.io/badge/Open_in_DevExpress_Support_Center-FF7200?style=flat-square&logo=DevExpress&logoColor=white)](https://supportcenter.devexpress.com/ticket/details/T828758)
 [![](https://img.shields.io/badge/📖_How_to_use_DevExpress_Examples-e9f6fc?style=flat-square)](https://docs.devexpress.com/GeneralInformation/403183)
 <!-- default badges end -->
-<!-- default file list -->
-*Files to look at*:
 
-* [DashboardConfig.cs](./CS/MVC_DataFederationExample/App_Start/DashboardConfig.cs) (VB: [DashboardConfig.vb](./VB/MVC_DataFederationExample/App_Start/DashboardConfig.vb))
-<!-- default file list end -->
-
-# ASP.NET MVC Dashboard - How to Register a Federated Data Source
+## Dashboard for MVC - How to Register a Federated Data Source
 
 This example registers the [DashboardFederationDataSource](https://docs.devexpress.com/Dashboard/DevExpress.DashboardCommon.DashboardFederationDataSource) from the following set of [data sources](https://docs.devexpress.com/Dashboard/116522):
 
@@ -17,6 +12,12 @@ This example registers the [DashboardFederationDataSource](https://docs.devexpre
 * [DashboardExcelDataSource](https://docs.devexpress.com/Dashboard/401433)
 * [DashboardObjectDataSource](https://docs.devexpress.com/Dashboard/401435)
 * [DashboardJsonDataSource](https://docs.devexpress.com/Dashboard/401431)
+
+<!-- default file list -->
+## Files to Look At
+
+* [DashboardConfig.cs](./CS/MVC_DataFederationExample/App_Start/DashboardConfig.cs) (VB: [DashboardConfig.vb](./VB/MVC_DataFederationExample/App_Start/DashboardConfig.vb))
+<!-- default file list end -->
 
 The federated data source is stored in the in-memory storage ([DataSourceInMemoryStorage](https://docs.devexpress.com/Dashboard/DevExpress.DashboardWeb.DataSourceInMemoryStorage)) and is available from the [Add Data Source](https://docs.devexpress.com/Dashboard/117456/web-dashboard/create-dashboards-on-the-web/providing-data/manage-data-sources) dialog. Note that when you add a federated data source to a dashboard, all data sources used in the federated data source are also added to the dashboard.
 
@@ -44,5 +45,5 @@ This example demonstrates the following query types you can use to create a data
 
 ## Examples
 
-- [ASP.NET Core Dashboard - How to Register a Federated Data Source](https://github.com/DevExpress-Examples/aspnet-core-dashboard-data-federation)
-- [ASP.NET Web Forms Dashboard - How to Register a Federated Data Source](https://github.com/DevExpress-Examples/aspnet-web-forms-dashboard-data-federation)
+* [ASP.NET Core Dashboard - How to Register a Federated Data Source](https://github.com/DevExpress-Examples/aspnet-core-dashboard-data-federation)
+* [ASP.NET Web Forms Dashboard - How to Register a Federated Data Source](https://github.com/DevExpress-Examples/aspnet-web-forms-dashboard-data-federation)
