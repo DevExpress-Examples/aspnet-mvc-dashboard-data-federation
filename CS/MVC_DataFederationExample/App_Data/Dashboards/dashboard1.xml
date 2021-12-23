@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Dashboard>
-  <Title Text="Sample Dashboard" />
+  <Title Text="New Dashboard" />
   <DataSources>
     <FederationDataSource Name="Federated Data Source" ComponentName="federationDataSource1">
       <Sources>
@@ -90,7 +90,7 @@
         </Query>
       </Queries>
     </FederationDataSource>
-    <SqlDataSource Name="SQL Data Source" ComponentName="sqlDataSource1" DataProcessingMode="Client">
+    <SqlDataSource Name="SQL Data Source" ComponentName="sqlDataSource1">
       <Connection Name="NWindConnectionString" FromAppConfig="true" />
       <Query Type="SelectQuery" Name="SQL Orders">
         <Tables>
@@ -102,17 +102,15 @@
       </Query>
       <ConnectionOptions CloseConnection="true" />
     </SqlDataSource>
-    <ExcelDataSource Name="Excel Data Source" FileName="SalesPerson.xlsx" ComponentName="excelDataSource1">
+    <ExcelDataSource Name="Excel Data Source" FileName="SalesPerson.xlsx" ComponentName="excelDataSource1" ConnectionName="excelSales">
       <Options Type="DevExpress.DataAccess.Excel.ExcelSourceOptions" SkipEmptyRows="true" UseFirstRowAsHeader="true" SkipHiddenColumns="true" SkipHiddenRows="true">
         <ImportSettings Type="DevExpress.DataAccess.Excel.ExcelWorksheetSettings" WorksheetName="Data" />
       </Options>
       <Schema />
       <ResultSchema />
     </ExcelDataSource>
-    <ObjectDataSource Name="Object Data Source" ComponentName="objectDataSource1" />
-    <JsonDataSource Name="JSON Data Source" ComponentName="jsonDataSource1">
-      <Source SourceType="DevExpress.DataAccess.Json.UriJsonSource" Uri="file:///Categories.json" />
-    </JsonDataSource>
+    <ObjectDataSource Name="Object Data Source" ComponentName="objectDataSource1" DataId="odsInvoices" />
+    <JsonDataSource Name="JSON Data Source" ConnectionName="jsonCategories" ComponentName="jsonDataSource1" />
   </DataSources>
   <Items>
     <Chart ComponentName="chartDashboardItem1" Name="Chart 1" DataSource="federationDataSource1" DataMember="Join query">

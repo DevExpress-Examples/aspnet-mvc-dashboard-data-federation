@@ -1,7 +1,6 @@
 using DevExpress.DashboardCommon;
 using DevExpress.DashboardWeb;
 using DevExpress.DashboardWeb.Mvc;
-using DevExpress.DataAccess.ConnectionParameters;
 using DevExpress.DataAccess.DataFederation;
 using DevExpress.DataAccess.Excel;
 using DevExpress.DataAccess.Json;
@@ -10,12 +9,9 @@ using System;
 using System.Web.Hosting;
 using System.Web.Routing;
 
-namespace MVC_DataFederationExample
-{
-    public static class DashboardConfig
-    {
-        public static void RegisterService(RouteCollection routes)
-        {
+namespace MVC_DataFederationExample {
+    public static class DashboardConfig {
+        public static void RegisterService(RouteCollection routes) {
             routes.MapDashboardRoute("dashboardControl", "DefaultDashboard");
 
             DashboardFileStorage dashboardFileStorage = new DashboardFileStorage("~/App_Data/Dashboards");
@@ -38,14 +34,17 @@ namespace MVC_DataFederationExample
 
             // Configures an Object data source.
             DashboardObjectDataSource objDataSource = new DashboardObjectDataSource("Object Data Source");
+            objDataSource.DataId = "odsInvoices";
 
             // Configures an Excel data source.
             DashboardExcelDataSource excelDataSource = new DashboardExcelDataSource("Excel Data Source");
+            excelDataSource.ConnectionName = "excelSales";
             excelDataSource.FileName = HostingEnvironment.MapPath(@"~/App_Data/SalesPerson.xlsx");
             excelDataSource.SourceOptions = new ExcelSourceOptions(new ExcelWorksheetSettings("Data"));
 
             // Configures a JSON data source.
             DashboardJsonDataSource jsonDataSource = new DashboardJsonDataSource("JSON Data Source");
+            jsonDataSource.ConnectionName = "jsonCategories";
             Uri fileUri = new Uri(HostingEnvironment.MapPath(@"~/App_Data/Categories.json"), UriKind.RelativeOrAbsolute);
             jsonDataSource.JsonSource = new UriJsonSource(fileUri);
 
@@ -59,20 +58,21 @@ namespace MVC_DataFederationExample
         }
 
         private static void Default_ConfigureDataConnection(object sender, ConfigureDataConnectionWebEventArgs e) {
-            if(e.DataSourceName == "Excel Data Source") {
+            if (e.ConnectionName == "excelSales") {
                 (e.ConnectionParameters as ExcelDataSourceConnectionParameters).FileName = HostingEnvironment.MapPath(@"~/App_Data/SalesPerson.xlsx");
             }
-            else if(e.DataSourceName == "JSON Data Source") {
+            else if (e.ConnectionName == "jsonCategories") {
                 UriJsonSource uriSource = (e.ConnectionParameters as JsonSourceConnectionParameters).JsonSource as UriJsonSource;
                 uriSource.Uri = new Uri(HostingEnvironment.MapPath(@"~/App_Data/Categories.json"), UriKind.RelativeOrAbsolute);
             }
         }
 
         private static void DataLoading(object sender, DataLoadingWebEventArgs e) {
-            if (e.DataSourceName == "Object Data Source") {
+            if (e.DataId == "odsInvoices") {
                 e.Data = Invoices.CreateData();
             }
         }
+
         private static DashboardFederationDataSource CreateFederatedDataSource(DashboardSqlDataSource sqlDS,
             DashboardExcelDataSource excelDS, DashboardObjectDataSource objDS, DashboardJsonDataSource jsonDS) {
 
