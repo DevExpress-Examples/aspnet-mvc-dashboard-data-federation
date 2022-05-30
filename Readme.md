@@ -42,6 +42,7 @@ This example demonstrates the following query types you can use to create a data
 
 * [ASP.NET MVC Framework - Register a Federated Data Source](https://docs.devexpress.com/Dashboard/400968)
 * [Register Default Data Sources](https://docs.devexpress.com/Dashboard/116482)
+* [Dashboard Data Source Wizard for a Federated Data Source](https://docs.devexpress.com/Dashboard/403876/web-dashboard/ui-elements-and-customization/dialogs-and-wizards/dashboard-data-source-wizard/specify-data-source-settings-data-federation?v=22.1)
 
 ## Examples
 
